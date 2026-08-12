@@ -163,3 +163,10 @@ The solution features three interconnected interactive dashboards[cite: 4]:
 * **Scripting & Analytics:** Python, Power Query (M-Code)[cite: 4]
 * **Visualization & Modeling:** Tableau, Power BI, Advanced DAX[cite: 4]
 * **Spreadsheet Utility:** Microsoft Excel[cite: 4]
+
+
+---
+
+## 🔗 Project Resources & Assets
+
+* 📁 **Full Project Resources (Datasets, Tableau .twbx, Demo Video & Presentation Slides):** [Access Google Drive Folder](https://drive.google.com/drive/folders/1FDKRmjcbCavGXAAUJDMrZmtgLoLhoJbK?usp=sharing)
