@@ -167,6 +167,8 @@ The solution features three interconnected interactive dashboards[cite: 4]:
 
 ---
 
+---
+
 ## 🔗 Project Resources & Assets
 
-* 📁 **Full Project Resources (Datasets, Tableau .twbx, Demo Video & Presentation Slides):** [Access Google Drive Folder]([https://drive.google.com/drive/folders/1FDKRmjcbCavGXAAUJDMrZmtgLoLhoJbK?usp=sharing](https://drive.google.com/drive/folders/1FDkRmjcbCavGXAAUjDMrZmtgLoLhoJbK?usp=sharing))
+* 📁 **Full Project Resources (Datasets, Tableau .twbx, Demo Video & Presentation Slides):** [Access Google Drive Folder](https://drive.google.com/drive/folders/1FDkRmjcbCavGXAAUjDMrZmtgLoLhoJbK?usp=sharing)
