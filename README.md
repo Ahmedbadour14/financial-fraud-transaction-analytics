@@ -1,174 +1,51 @@
-# Financial Fraud & Transaction Behavior Analytics — Technical & Business Documentation
+# Financial Transaction & Fraud Analytics
 
----
+A Tableau portfolio project exploring transaction volumes, records labeled as fraud, and transaction/channel behavior.
 
-## 1. Project Overview & Business Problem
+This is descriptive analytics. It is not a deployed fraud-prediction service, a real-time alerting system, or proof of financial loss prevented.
 
-Banks and financial institutions process hundreds of thousands of transactions daily[cite: 4]. Manual fraud detection methods are inefficient, reactive, and incapable of identifying complex operational risks and anomalies in real time[cite: 4].
+## View the workbook and dashboards
 
-### Project Objective
-The primary goal of this end-to-end data analytics solution is to provide a multi-layered monitoring framework that evaluates:
-* **Fraud Exposure & Risk Segmentation:** Isolating systemic fraud patterns from random data noise[cite: 4].
-* **Transactional Dynamics:** Tracking daily volumes, moving averages, and temporal patterns[cite: 4].
-* **Channel & Behavioral Trends:** Mapping customer preferences across physical and digital payment endpoints[cite: 4].
-* **Actionable Risk Mitigation:** Translating statistical findings into concrete business recommendations[cite: 4].
+[Project resources on Google Drive](https://drive.google.com/drive/folders/1FDkRmjcbCavGXAAUjDMrZmtgLoLhoJbK?usp=sharing)
 
----
+The linked resources include a Tableau packaged workbook and three dashboard images. The GitHub repository currently contains this README and a license file; the workbook and images are hosted externally, not committed here.
 
-## 2. Core Executive KPIs
+## Dashboard scope
 
-| Metric | Value | Description |
-| :--- | :--- | :--- |
-| **Total Volume Analyzed** | **₹9,907,591,425** (~₹9.9B) | Total financial value processed across all channels[cite: 4]. |
-| **Total Transactions** | **199,999** (~200K) | Total volume of transactional logs evaluated[cite: 4]. |
-| **Systemic Fraud Baseline** | **5.04%** | Average background fraud rate across the platform[cite: 4]. |
-| **Total Fraud Exposure** | **₹497,115,710** (~₹497M) | Total monetary value lost to confirmed fraudulent activity[cite: 4]. |
-| **Confirmed Fraud Cases** | **10,088** | Total count of identified malicious transactions[cite: 4]. |
-| **Average Transaction Value**| **₹49,538** | Mean transaction size across all account types[cite: 4]. |
+- **Executive overview:** transaction value, transaction counts, fraud-labeled records, and time trends.
+- **Fraud monitoring:** fraud rates and amounts across segments, with interval-based comparisons in the workbook.
+- **Transaction & channel behavior:** transaction patterns by time, channel, and other available dimensions.
 
----
+## Measures and interpretation
 
-## 3. Enterprise Data Architecture & Star Schema
+- **Transaction volume:** the sum of transaction amounts.
+- **Fraud exposure:** the sum of amounts for records where `Is_Fraud = 1`. This is not verified net loss, a chargeback total, or a recovery-adjusted figure.
+- **Fraud rate:** a ratio based on fraud-labeled records and the workbook's transaction-count measure.
+- **Segment comparison:** the inspected Tableau workbook contains Wilson interval calculations with a Z value of 1.96. Its comparison field flags a deviation when the overall baseline falls outside the segment interval, in either direction. This is not a control-chart upper control limit or evidence of a causal risk driver.
+- **Trend smoothing:** the workbook includes a moving average over the current mark and six preceding marks. Its time meaning depends on the worksheet's date granularity and table-calculation settings.
 
-The data warehouse is engineered using a **Star Schema** centered on `Fact_Transactions` to ensure fast query aggregation, low latency, and efficient relational filtering[cite: 4].
+The workbook's `Total Transactions` calculation counts non-null customer IDs, while `Segment Sample Size` counts records. Those denominators should be reconciled before interpreting segment comparisons as directly comparable rates.
 
-```text
-                          +------------------------+
-                          |   Dim_Account_Type     |
-                          +-----------+------------+
-                                      |
-+----------------------+              |              +-------------------------+
-|     Dim_Geography    +--------------+--------------+        Dim_Date         |
-+----------------------+              |              +-------------------------+
-                                      |
-+----------------------+     +--------+-------+      +-------------------------+
-|   Dim_Demographics   +-----+Fact_Transactions+-----+     Dim_Device_Type     |
-+----------------------+     +--------+-------+      +-------------------------+
-                                      |
-+----------------------+              |              +-------------------------+
-| Dim_Merchant_Category+--------------+--------------+  Dim_Transaction_Device |
-+----------------------+              |              +-------------------------+
-                                      |
-                          +-----------+------------+
-                          |  Dim_Transaction_Type  |
-                          +------------------------+
-```
+## Data model
 
-### Table Definitions
-* **`Fact_Transactions` (Fact Table):** Stores numerical transaction metrics (`Transaction_Amount`, `Account_Balance`, `Hour`), surrogate keys, and binary flags (`Is_Fraud`, `Is_Weekend`)[cite: 4].
-* **8 Dimension Tables:** `Dim_Geography`, `Dim_Date`, `Dim_Demographics`, `Dim_Device_Type`, `Dim_Transaction_Device`, `Dim_Merchant_Category`, `Dim_Transaction_Type`, and `Dim_Account_Type`[cite: 4].
+The packaged workbook uses a transaction fact table and related dimensions for date, geography, demographics, device, merchant category, transaction type, and account type. This README describes the supplied Tableau artifact and does not claim that SQL, Python, Power Query, DAX, or a machine-learning application is included in this repository.
 
----
+## Open and review
 
-## 4. ETL & Advanced Feature Engineering
+1. Open the linked project folder and locate the `.twbx` workbook.
+2. Open it with compatible Tableau software. If prompted, review the workbook's packaged data connections.
+3. Review dashboard filters and calculation settings before comparing totals or segments.
+4. Use the dashboard images when Tableau is unavailable. They show saved states, not a live monitoring feed.
 
-To eliminate arbitrary risk thresholds, dynamic economic banding was developed in **Power Query (M-Code)** using percentile-based distribution logic[cite: 4].
+## Known limits
 
-### Dynamic Percentile Algorithm (`Amount_Band`)
-The engine dynamically parses transaction amounts to calculate the 25th ($Q_1$), 50th ($Q_2$), and 75th ($Q_3$) percentiles[cite: 4]:
+- The supplied source file was observed to contain 200,000 data rows, while the dashboard shows 199,999 transactions. The count definition, missing IDs, filters, and import steps need to be checked before a final total is stated.
+- Fraud labels are dataset labels. Their original definition and validation method have not yet been documented here.
+- Spikes and segment differences can guide investigation, but do not establish coordinated attacks, botnets, or any other cause.
+- The dataset's original source, reuse terms, preparation steps, and any course/tutorial contribution still need attribution. No bank deployment or paid client engagement is claimed.
 
-```powerquery
-let
-    Source = #"Previous_Step",
-    AmountList = Source[Transaction_Amount],
-    Q1 = List.Percentile(AmountList, 0.25),
-    Q2 = List.Percentile(AmountList, 0.50),
-    Q3 = List.Percentile(AmountList, 0.75),
-    
-    #"Added Amount Band" = Table.AddColumn(
-        Source, 
-        "Amount_Band", 
-        each if [Transaction_Amount] <= Q1 then "Low"
-             else if [Transaction_Amount] <= Q2 then "Medium"
-             else if [Transaction_Amount] <= Q3 then "High"
-             else "Very High", 
-        type text
-    )
-in
-    #"Added Amount Band"
-```
+## License and author
 
----
+The repository includes an [MIT License](LICENSE). Dataset and external-asset reuse rights must be verified separately.
 
-## 5. Statistical Rigor & Sample Bias Mitigation
-
-Relying purely on raw percentages introduces **small-sample bias** (e.g., a merchant category with 2 out of 3 fraudulent transactions shows a deceptively high 66.7% rate)[cite: 4]. To prevent false positives, the **Wilson Score Interval** algorithm was implemented using **DAX Measures**[cite: 4].
-
-### Mathematical Formulation
-The Wilson Center ($\tilde{p}$) and Interval Bounds adjust the observed sample proportion ($\hat{p}$) based on sample size ($n$) and standard normal distribution score ($z$)[cite: 4]:
-
-$$\text{Wilson Center} = \frac{\hat{p} + \frac{z^2}{2n}}{1 + \frac{z^2}{n}}$$
-
-$$\text{Wilson Margin} = \frac{z}{1 + \frac{z^2}{n}} \sqrt{\frac{\hat{p}(1-\hat{p})}{n} + \frac{z^2}{4n^2}}$$
-
-$$\text{Lower Bound} = \text{Center} - \text{Margin}, \quad \text{Upper Bound} = \text{Center} + \text{Margin}$$
-
-### DAX Measure Directory
-* **Core Metrics:** `Total Transactions`, `Total Fraud Count`, `Total Legitimate Count`, `Fraud Exposure`, `Fraud Rate %`[cite: 4].
-* **Statistical Bounds:** `Baseline Fraud Rate` (5.04%), `Wilson Center`, `Wilson Margin`, `Wilson Z Value`, `Segment Fraud Rate - Lower Bound`, `Segment Fraud Rate - Upper Bound`[cite: 4].
-* **Significance Evaluation:** `Is Segment Significant vs Baseline` (Returns TRUE only if the Lower Bound exceeds 5.04%)[cite: 4].
-* **Time Intelligence:** `7-Day Moving Avg Transaction Volume`[cite: 4].
-
----
-
-## 6. Dashboard Architecture & Key Insights
-
-The solution features three interconnected interactive dashboards[cite: 4]:
-
-### Dashboard 1: Executive Overview
-* **Smoothed Trend Analysis:** Overlays a **7-Day Moving Average** on top of daily volumes to filter out daily volatility[cite: 4].
-* **Geographic Volume Leaders:**
-  * **Chandigarh:** ₹393M[cite: 4]
-  * **Kavaratti:** ₹285M[cite: 4]
-  * **Udaipur:** ₹127M[cite: 4]
-* **Balanced Portfolio Mix:** Account types show equal system distribution: Checking (33.50%), Savings (33.27%), and Business (33.23%)[cite: 4].
-
-### Dashboard 2: Fraud Monitoring & Statistical Analysis
-* **High-Risk Sector Identification:** Clothing (5.20%) and Groceries (5.19%) cross the upper control limit of the 5.04% baseline[cite: 4].
-* **Monetary Exposure Concentration:** The **Very High** amount band represents the highest exposure at **₹209.47M** across 2,415 cases[cite: 4].
-* **Coordinated Attack Windows:** Identified synchronized fraud rate spikes on **January 6 (5.75%)** and **January 26 (5.58%)**, pointing to automated botnet exploits[cite: 4].
-
-### Dashboard 3: Transaction & Channel Behavior
-* **Temporal Demand:** Peak transactional load occurs daily between **12:00 PM and 3:00 PM**[cite: 4].
-* **Weekly Split:** **72.26%** of interactions occur on Weekdays vs. **27.74%** on Weekends[cite: 4].
-* **Infrastructure Traffic:** Density heatmaps highlight **ATMs and Self-Service Kiosks** as primary physical touchpoints (>5,100 transactions/cell)[cite: 4].
-
----
-
-## 7. Strategic Action Plan
-
-```text
-+-----------------------------------------------------------------------------------+
-|                            STRATEGIC RECOMMENDATIONS                              |
-+-----------------------------------------------------------------------------------+
-| 1. Enforce Step-up Authentication (2FA / 3DS):                                    |
-|    Mandate 3D Secure verification loops for High/Very High transactions exceeding |
-|    ₹50K in elevated merchant sectors (Clothing & Groceries).                      |
-+-----------------------------------------------------------------------------------+
-| 2. API Forensic Investigation:                                                    |
-|    Conduct deep-packet network log audits for Jan 6 and Jan 26 anomaly windows to |
-|    patch automated botnet credential-stuffing exploits.                           |
-+-----------------------------------------------------------------------------------+
-| 3. Infrastructure Load Balancing:                                                 |
-|    Schedule routine database updates and ATM server maintenance around 9:00 AM,   |
-|    aligning with daily off-peak traffic windows.                                  |
-+-----------------------------------------------------------------------------------+
-```
-
----
-
-## 8. Technical Stack
-
-* **Database & Data Pipeline:** SQL (MySQL)[cite: 4]
-* **Scripting & Analytics:** Python, Power Query (M-Code)[cite: 4]
-* **Visualization & Modeling:** Tableau, Power BI, Advanced DAX[cite: 4]
-* **Spreadsheet Utility:** Microsoft Excel[cite: 4]
-
-
----
-
----
-
-## 🔗 Project Resources & Assets
-
-* 📁 **Full Project Resources (Datasets, Tableau .twbx, Demo Video & Presentation Slides):** [Access Google Drive Folder](https://drive.google.com/drive/folders/1FDkRmjcbCavGXAAUjDMrZmtgLoLhoJbK?usp=sharing)
+[Ahmed Badour](https://github.com/Ahmedbadour14)
